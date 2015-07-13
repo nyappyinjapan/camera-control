@@ -1,0 +1,67 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>カメラコントローラ</title>
+</head>
+<body>
+  左
+  <input style="-webkit-transform: rotate(180deg); transform: rotate(180deg);"  id="range02" type="range" min="65" max="255" step="1" value="150" onchange="publishvalue()" />
+  右
+  <input style="-webkit-transform: rotate(90deg); transform: rotate(90deg); height:150px;" id="range01" type="range" min="100" max="240" step="1" value="175" onchange="publishvalue()" />
+  <button onclick="setDefault();">初期位置に戻す</button>
+  <br>
+<!--  <input type="text" id="msg_input" style="width:200px;" />
+  <button onclick="publishMessage();">語る</button> -->
+
+  <div id="msg"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript">
+    // 1.イベントとコールバックの定義
+    var socketio = io.connect('http://camera-control.cloudapp.net:8080');
+
+    socketio.on("connected", function(name) {});
+    socketio.on("publish", function (data) { addMessage(data.value); });
+    socketio.on("disconnect", function () {});
+
+    // 2.イベントに絡ませる関数の定義
+    function start(name) {
+    //  socketio.emit("connected", name);
+    }
+
+    function publishvalue() {
+       var valueInput = document.getElementById("range01").value;
+       var valueInput2 = document.getElementById("range02").value;
+       var msg = valueInput + "," + valueInput2;
+       socketio.emit("publish", {value: msg});
+    }
+
+    function publishMessage() {
+      var textInput = document.getElementById('msg_input');
+      var msg = textInput.value;
+      socketio.emit("publish", {value: msg});
+      textInput.value = '';
+    }
+
+    function setDefault() {
+      socketio.emit("publish", {value: "175,150;"});
+      document.getElementById("range01").value=175;
+      document.getElementById("range02").value=150;
+    }
+
+    function addMessage (msg) {
+      var domMeg = document.createElement('div');
+      domMeg.innerHTML =  msg;
+      var values = msg.split(",");
+      document.getElementById("range01").value=values[0];
+      document.getElementById("range02").value=values[1];
+    // msgArea.appendChild(domMeg);
+    }
+
+    // 3.開始処理
+    var msgArea = document.getElementById("msg");
+    var myName = Math.floor(Math.random()*100) + "さん";
+    //addMessage("貴方は" + myName + "として入室しました");
+    start(myName);
+  </script>
+</body>
+</html>
